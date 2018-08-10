@@ -75,11 +75,11 @@ class Recognizer:
         #Define npArray of 3x2 and assign scaled to it. XXXXXXXXXXXXXXxx
         #face_array = np.array(160,160,3)
         face_list = []
-        print('Number of faces ******* %s', nrof_faces)
+        #print('Number of faces ******* %s', nrof_faces)
         #for rectangle in range(0,nrof_faces):
             #cv2.rectangle(img,box_cord[rectangle],(0,255,0),5)
-        print('Type of Box Cord ******* %s',type(box_cord))
-        print('shape of Box Cord ******* %s', box_cord.shape)
+        #print('Type of Box Cord ******* %s',type(box_cord))
+        #print('shape of Box Cord ******* %s', box_cord.shape)
         # Display the resulting frame
         #cv2.imshow('Video', img)
         if nrof_faces>0:
@@ -112,7 +112,7 @@ class Recognizer:
                 #else:
                     #output_filename_n = "{}{}".format(filename_base, file_extension)
                 misc.imsave(output_filename_n, scaled)
-                print('type of scaled************',type(scaled))
+                #print('type of scaled************',type(scaled))
                 #Appending each face to face_array
                 face_list.append(scaled)
         else:
@@ -122,8 +122,7 @@ class Recognizer:
         #Invoke Classifier Code
     
         # Run forward pass to calculate embeddings
-        print('Calculating features for images')
-
+        #print('Calculating features for images')
         nrof_images = nrof_faces
         nrof_batches_per_epoch = int(math.ceil(1.0 * nrof_images / 1000))
         emb_array = np.zeros((nrof_images, self.embedding_size))
@@ -144,8 +143,11 @@ class Recognizer:
                 best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
                 
                 #Print Face recognization result for each Face in the Frame
+                ans = {}
                 for i in range(len(best_class_indices)):
-                    print('%4d  %s: %.3f' % (i, self.class_names[best_class_indices[i]], best_class_probabilities[i]))
+                    ans[self.class_names[best_class_indices[i]]] = best_class_probabilities[i]
+                    #print('%4d  %s: %.3f' % (i, self.class_names[best_class_indices[i]], best_class_probabilities[i]))
+                return str(ans)
         return  None
     
     def Face_load_data(self, face_list, do_random_crop, do_random_flip, image_size, do_prewhiten=True):

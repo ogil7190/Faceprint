@@ -1,10 +1,10 @@
 from flask import Flask, render_template
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, send, emit
 import base64
 import Recognizer
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'ogil'
+app.config['SECRET_KEY'] = 'ogil-jax'
 socketio = SocketIO(app)
 
 @socketio.on('connect')
@@ -14,7 +14,9 @@ def handle_connect():
 @socketio.on('on-data')
 def handle_data(data):
     img = readbase(data)
-    recognizer.predict(img)
+    ans = recognizer.predict(img)
+    print(ans)
+    emit('completed', ans)
 
 def onReady():
     print('Ready')
