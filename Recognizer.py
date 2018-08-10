@@ -41,7 +41,7 @@ class Recognizer:
             print('Loading feature extraction model ...')
             
             # Use your path where you have saved pretrained facenet model
-            facenet.load_model('../../models/20180402-114759/20180402-114759.pb')
+            facenet.load_model('../../../models/20180402-114759/20180402-114759.pb')
             
             # Get input and output tensors
             self.images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
@@ -50,7 +50,7 @@ class Recognizer:
             self.embedding_size = self.embeddings.get_shape()[1]
 
             # your custom classifier trained the last layer with your own image database. Please refer to Facenet repo for training custom classifier
-            classifier_filename_exp = os.path.expanduser('../../models/test_classifier.pkl')
+            classifier_filename_exp = os.path.expanduser('../../../models/test_classifier.pkl')
 
             # Classify images
             print('Testing classifier')
