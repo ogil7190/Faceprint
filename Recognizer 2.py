@@ -18,9 +18,8 @@ from sklearn.svm import SVC
 from time import sleep
 
 class Recognizer:
-    def __init__(self, callback):
+    def __init__(self):
         self.load()
-        callback()
 
     def load(self):
         with tf.Graph().as_default():
@@ -58,65 +57,26 @@ class Recognizer:
                 (self.model, self.class_names) = pickle.load(infile)
             print('Loaded classifier model from file "%s"' % classifier_filename_exp)
     
-    def facedetect():
-        video = cv2.VideoCapture(0)
-        while True:
-            ret, frame = cap.read()
-            img = frame
-            print(type(frame))
-
-            if img.ndim<2:
-                print('Unable to align "%s"' % img)
-            if img.ndim == 2:
-                img = facenet.to_rgb(img)
-            img = img[:,:,0:3]
-
-            bounding_boxes, box_cord = align.detect_face.detect_face(img, self.minsize, self.pnet, self.rnet, self.onet, self.threshold, self.factor)
-            
-            nrof_faces = bounding_boxes.shape[0]
-            #Define npArray of 3x2 and assign scaled to it. XXXXXXXXXXXXXXxx
-            face_array = np.array(160,160,3)
-            face_list = []
-            print('Number of faces ******* %s', nrof_faces)
-            for rectangle in range(0,nrof_faces):
-                cv2.rectangle(img,box_cord[rectangle],(0,255,0),5)
-            #print('Type of Box Cord ******* %s',type(box_cord))
-            #print('shape of Box Cord ******* %s', box_cord.shape)
-            # Display the resulting frame
-            cv2.imshow('Video', img)
-            if nrof_faces>0:
-                print("We have ", nrof_faces)
-    
-    def predict(self, img):
-        frame = cv2.imread(img)
-        img = frame
-        print(type(frame))
-
+    def facedetect(self, img, callback):
         if img.ndim<2:
             print('Unable to align "%s"' % img)
         if img.ndim == 2:
             img = facenet.to_rgb(img)
         img = img[:,:,0:3]
-
         bounding_boxes, box_cord = align.detect_face.detect_face(img, self.minsize, self.pnet, self.rnet, self.onet, self.threshold, self.factor)
-        
         nrof_faces = bounding_boxes.shape[0]
-        #Define npArray of 3x2 and assign scaled to it. XXXXXXXXXXXXXXxx
-        #face_array = np.array(160,160,3)
+        print('Number of faces ******* %s', nrof_faces)
+        if(nrof_faces > 0):
+            self.predict(img, nrof_faces, bounding_boxes)
+        callback()
+    
+    def predict(self, img, nrof_faces, bounding_boxes):
         face_list = []
-        #print('Number of faces ******* %s', nrof_faces)
-        #for rectangle in range(0,nrof_faces):
-            #cv2.rectangle(img,box_cord[rectangle],(0,255,0),5)
-        #print('Type of Box Cord ******* %s',type(box_cord))
-        #print('shape of Box Cord ******* %s', box_cord.shape)
-        # Display the resulting frame
-        #cv2.imshow('Video', img)
         if nrof_faces>0:
             det = bounding_boxes[:,0:4]
             det_arr = []
             img_size = np.asarray(img.shape)[0:2]
             if nrof_faces>1:
-                #if args.detect_multiple_faces:
                 for i in range(nrof_faces):
                     det_arr.append(np.squeeze(det[i]))
             else:
@@ -125,8 +85,6 @@ class Recognizer:
             for i, det in enumerate(det_arr):
                 det = np.squeeze(det)
                 bb = np.zeros(4, dtype=np.int32)
-                # Hardcoding
-                # args.margin = 32 image_size 160
                 bb[0] = np.maximum(det[0]-32/2, 0)
                 bb[1] = np.maximum(det[1]-32/2, 0)
                 bb[2] = np.minimum(det[2]+32/2, img_size[1])
@@ -135,23 +93,13 @@ class Recognizer:
                 scaled = misc.imresize(cropped, (160, 160), interp='bilinear')
                 self.nrof_successfully_aligned += 1
                 filename_base, file_extension = os.path.splitext(self.output_filename)
-                
-                #if args.detect_multiple_faces: #Try keeping it in nparray insted of writing
                 output_filename_n = "{}_{}{}".format(filename_base, i, file_extension)
-                #else:
-                    #output_filename_n = "{}{}".format(filename_base, file_extension)
                 misc.imsave(output_filename_n, scaled)
-                #print('type of scaled************',type(scaled))
-                #Appending each face to face_array
                 face_list.append(scaled)
         else:
             print('No Image or - Unable to align')
             return None
         
-        #Invoke Classifier Code
-    
-        # Run forward pass to calculate embeddings
-        #print('Calculating features for images')
         nrof_images = nrof_faces
         nrof_batches_per_epoch = int(math.ceil(1.0 * nrof_images / 1000))
         emb_array = np.zeros((nrof_images, self.embedding_size))
@@ -159,23 +107,18 @@ class Recognizer:
         with self.my_graph.as_default():
             with tf.Session() as sess:
                 for i in range(nrof_batches_per_epoch):
-                    #start_index = i * args.batch_size - Hardcoded Batch Size
                     start_index = i * 1000
-                    #end_index = min((i + 1) * args.batch_size, nrof_images)
                     end_index = min((i + 1) * 1000, nrof_images)
-                    
                     images = self.Face_load_data(face_list, False, False, 160)
                     feed_dict = {self.images_placeholder: images, self.phase_train_placeholder: False}
                     emb_array[start_index:end_index, :] = sess.run(self.embeddings, feed_dict=feed_dict)
                 predictions = self.model.predict_proba(emb_array)
                 best_class_indices = np.argmax(predictions, axis=1)
                 best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
-                
-                #Print Face recognization result for each Face in the Frame
                 ans = {}
                 for i in range(len(best_class_indices)):
                     ans[self.class_names[best_class_indices[i]]] = best_class_probabilities[i]
-                    #print('%4d  %s: %.3f' % (i, self.class_names[best_class_indices[i]], best_class_probabilities[i]))
+                    print('%4d  %s: %.3f' % (i, self.class_names[best_class_indices[i]], best_class_probabilities[i]))
                 return str(ans)
         return  None
     

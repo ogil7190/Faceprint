@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, send, emit
 import base64
 import Recognizer
+from threading import Thread
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ogil-jax'
@@ -18,8 +19,13 @@ def handle_data(data):
     print(ans)
     emit('completed', ans)
 
+def showUI():
+    recognizer.facedetect()
+
 def onReady():
-    print('Ready')
+    thread = Thread(target = showUI, args = (10, ))
+    thread.start()
+    socketio.run(app, host='', port=7190)
 
 def readbase(base_string):
     dope = base64.b64decode(base_string)
@@ -30,4 +36,3 @@ def readbase(base_string):
 
 if __name__ == '__main__':
     recognizer = Recognizer.Recognizer(onReady)
-    socketio.run(app, host='', port=7190)
