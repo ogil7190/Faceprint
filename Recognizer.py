@@ -58,35 +58,6 @@ class Recognizer:
                 (self.model, self.class_names) = pickle.load(infile)
             print('Loaded classifier model from file "%s"' % classifier_filename_exp)
     
-    def facedetect():
-        video = cv2.VideoCapture(0)
-        while True:
-            ret, frame = cap.read()
-            img = frame
-            print(type(frame))
-
-            if img.ndim<2:
-                print('Unable to align "%s"' % img)
-            if img.ndim == 2:
-                img = facenet.to_rgb(img)
-            img = img[:,:,0:3]
-
-            bounding_boxes, box_cord = align.detect_face.detect_face(img, self.minsize, self.pnet, self.rnet, self.onet, self.threshold, self.factor)
-            
-            nrof_faces = bounding_boxes.shape[0]
-            #Define npArray of 3x2 and assign scaled to it. XXXXXXXXXXXXXXxx
-            face_array = np.array(160,160,3)
-            face_list = []
-            print('Number of faces ******* %s', nrof_faces)
-            for rectangle in range(0,nrof_faces):
-                cv2.rectangle(img,box_cord[rectangle],(0,255,0),5)
-            #print('Type of Box Cord ******* %s',type(box_cord))
-            #print('shape of Box Cord ******* %s', box_cord.shape)
-            # Display the resulting frame
-            cv2.imshow('Video', img)
-            if nrof_faces>0:
-                print("We have ", nrof_faces)
-    
     def predict(self, img):
         frame = cv2.imread(img)
         img = frame

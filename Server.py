@@ -19,13 +19,8 @@ def handle_data(data):
     print(ans)
     emit('completed', ans)
 
-def showUI():
-    recognizer.facedetect()
-
 def onReady():
-    thread = Thread(target = showUI, args = (10, ))
-    thread.start()
-    socketio.run(app, host='', port=7190)
+    print('Everything is ready')
 
 def readbase(base_string):
     dope = base64.b64decode(base_string)
@@ -36,3 +31,4 @@ def readbase(base_string):
 
 if __name__ == '__main__':
     recognizer = Recognizer.Recognizer(onReady)
+    socketio.run(app, host='', port=7190)
